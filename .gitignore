@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual Environment
+venv/
+env/
+bin/
+lib/
+include/
+*.pyc
+*.pyo
+*.pyd
+
+# Jupyter Notebooks
+.ipynb_checkpoints/
+
+# IDE (e.g., VSCode)
+.vscode/
+
+# Text editors
+*.swp
+*.swo
+
+# Dependency directories
+node_modules/
