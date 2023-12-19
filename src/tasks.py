@@ -20,7 +20,7 @@ def add_numbers(self, task_id, x, y):
         raise
 
 @app.task(bind=True, name = 'multiply')
-def multiply_result(self, task_id, result, z):
+def multiply_result(self, result, task_id,  z):
     try:
         logger.info(f"Task {task_id} started. Multiplying result {result} by {z}")
 
