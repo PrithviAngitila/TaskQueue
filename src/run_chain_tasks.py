@@ -1,36 +1,48 @@
 from celery import chain
-from celery.exceptions import ChordError
+from celery.result import AsyncResult
 from celery_app import app
 from tasks import add_numbers, multiply_result
 import logging
-import time
 import random
+import time
 
 logger = logging.getLogger(__name__)
 
 def run_chain_tasks(n=10):
-    # Result accumulator
-    final_result = 0
+    # List to store AsyncResult objects
+    task_results = []
 
-    # Chain tasks sequentially
-    try:
-        for task_id in range(1, n + 1):
-            result = chain(
-                add_numbers.s(task_id, random.randint(1, 10), random.randint(1, 10)) |
-                multiply_result.s(task_id, z=random.randint(1, 10))
-            )()
+    # Chain tasks to trigger them
+    for task_id in range(1, n + 1):
+        result = chain(
+            add_numbers.s(task_id, random.randint(1, 10), random.randint(1, 10)) |
+            multiply_result.s(task_id, z=random.randint(1, 10))
+        )()
 
-            # Wait for the result
-            final_result += result.get()
-            logger.info(f"Task {task_id} Final Result: {final_result}")
+        task_results.append(result)
 
-    except ChordError as e:
-        logger.error(f"Error in chain: {e}")
-    except Exception as e:
-        logger.error(f"Unexpected error: {e}")
+    return task_results
 
-    # Print the overall final result
-    logger.info(f"Overall Final Result (Sum of Individual Results): {final_result}")
+def display_completed_results(task_results):
+    # Check the status of each task periodically and display completed results
+    while any(result.state in ['PENDING', 'STARTED'] for result in task_results):
+        completed_results = []
+
+        for task_id, result in enumerate(task_results, start=1):
+            if result.ready():
+                task_status = result.status
+                task_result = result.result
+                logger.info(f"Task {task_id} Status: {task_status}")
+                logger.info(f"Task {task_id} Result: {task_result}")
+                completed_results.append(result)
+
+        # Remove completed tasks from the list
+        for completed_result in completed_results:
+            task_results.remove(completed_result)
+
+        # Sleep for a short duration before checking again
+        time.sleep(2)
 
 if __name__ == "__main__":
-    run_chain_tasks()
+    task_results = run_chain_tasks()
+    display_completed_results(task_results)
