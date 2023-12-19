@@ -15,8 +15,8 @@ def run_chain_tasks(n=10):
     # Chain tasks to trigger them
     for task_id in range(1, n + 1):
         result = chain(
-            add_numbers.s(task_id, random.randint(1, 10), random.randint(1, 10)) |
-            multiply_result.s(task_id, z=random.randint(1, 10))
+            add_numbers.s(x=random.randint(1, 10), y=random.randint(1, 10),task_id = task_id) |
+            multiply_result.s( task_id = task_id,z=random.randint(1, 10))
         )()
 
         task_results.append(result)
